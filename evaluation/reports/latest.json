@@ -1,0 +1,29 @@
+{
+  "task_success_rate": {
+    "tier1": 0.2,
+    "tier2": 0.0,
+    "tier3": 0.0
+  },
+  "state_tracking_precision": 1.0,
+  "state_tracking_recall": 1.0,
+  "contradiction_handling_pass_rate": 1.0,
+  "memory_growth_kb_per_turn": 0.5184,
+  "context_efficiency_pct_of_budget": 0.0442,
+  "avg_latency_seconds": 0.0007,
+  "model_size_compliant": true,
+  "total_games": 15,
+  "total_wins": 1,
+  "overall_success_rate": 0.06666666666666667,
+  "baseline_comparison": {
+    "our_agent": {
+      "task_success_rate": 0.06666666666666667,
+      "precision": 1.0,
+      "latency_s": 0.0007
+    },
+    "baseline_full_history": {
+      "task_success_rate": 0.0,
+      "precision": 1.0,
+      "latency_s": 0.0023
+    }
+  }
+}

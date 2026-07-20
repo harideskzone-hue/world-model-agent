@@ -1,0 +1,16 @@
+tier,seed,won,score,max_score,turns,elapsed_s,baseline_won
+1,42,False,0,1,30,0.4,False
+1,99,False,0,1,30,0.36,False
+1,123,False,0,1,30,0.37,False
+1,7,False,0,1,30,0.4,False
+1,777,True,1,1,2,0.27,False
+2,42,False,0,1,30,0.31,False
+2,99,False,0,1,30,0.37,False
+2,123,False,0,1,30,0.37,False
+2,7,False,0,1,30,0.35,False
+2,777,False,0,1,30,0.39,False
+3,42,False,0,1,30,0.34,False
+3,99,False,0,1,30,0.37,False
+3,123,False,0,1,30,0.38,False
+3,7,False,0,1,30,0.32,False
+3,777,False,0,1,30,0.39,False
