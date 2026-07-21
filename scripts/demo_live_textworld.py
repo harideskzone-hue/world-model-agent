@@ -14,6 +14,7 @@
 import sys
 import os
 import re
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -51,20 +52,6 @@ def generate_game(output_dir: str) -> str:
     return textworld.generator.compile_game(game, options)
 
 
-def create_observation(game_state, turn_id: int) -> Observation:
-    """Convert TextWorld GameState to our Observation DTO."""
-    return Observation(
-        feedback=game_state.get("feedback", ""),
-        description=game_state.get("description", ""),
-        inventory=game_state.get("inventory", ""),
-        location=game_state.get("location", ""),
-        objective=game_state.get("objective", ""),
-        score=game_state.get("score", 0),
-        max_score=game_state.get("max_score", 0),
-        won=game_state.get("won", False),
-        lost=game_state.get("lost", False),
-        turn_id=turn_id,
-    )
 
 
 # Track actions that failed so we don't retry them
@@ -421,8 +408,9 @@ def run_demo(policy: str = "rule"):
     print(f"  Game: {game_file}")
 
     # ── Start environment ──
-    game_path = generate_game()
-    env = TextWorldWrapper(game_path)
+    game_path = generate_game(game_dir)
+    from env.textworld_wrapper import TextWorldWrapper
+    env = TextWorldWrapper(game_path, eval_mode=True)
     obs = env.reset()
 
     # ── Initialize pipeline ──
@@ -441,8 +429,7 @@ def run_demo(policy: str = "rule"):
             exit(1)
         action_selector = ActionSelector(slm_runner)
 
-    obs = create_observation(game_state, turn_id=0)
-    admissible = game_state.get("admissible_commands", [])
+    admissible = env.get_admissible_commands()
 
     # Parse objective into sub-goals
     sub_goals = obj_parser.parse(obs.objective)
@@ -575,15 +562,14 @@ def run_demo(policy: str = "rule"):
         print(f"  ⏱️  Latency: {latency:.0f}ms")
 
         # 7b. Show what TextWorld considers valid (for comparison)
-        admissible = game_state.get("admissible_commands", [])
+        admissible = env.get_admissible_commands()
         is_valid = action in admissible
         marker = "✅" if is_valid else "⚠️"
         print(f"  {marker} Action '{action}' in admissible list: {is_valid}")
         print(f"     Admissible: {admissible}")
 
         # 8. Execute action
-        game_state, reward, done = env.step(action)
-        obs = create_observation(game_state, turn_id=turn + 1)
+        obs, reward, done = env.step(action)
         total_reward += reward
 
         feedback = obs.feedback or obs.description or "(no response)"
@@ -619,6 +605,10 @@ def run_demo(policy: str = "rule"):
         dir_str = f" [{edge.direction}]" if edge.direction else ""
         print(f"    ({edge.subject}, {edge.relation.value}, {edge.object}){dir_str}")
     print(f"\n{DIVIDER}\n")
+
+    # Save snapshot
+    from world_model.persistence.serializer import save_snapshot
+    save_snapshot(graph, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "examples", "expected_world_model.json"))
 
 
 if __name__ == "__main__":
