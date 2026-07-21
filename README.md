@@ -1,0 +1,100 @@
+# World Modeling for Autonomous Agents
+**Track 1 Submission | Microsoft TextWorld**
+
+An autonomous agent architecture that replaces bounded conversation history with a structured, dynamically updated world model.
+
+---
+
+## 1. Architecture
+
+```text
+TextWorld
+      │
+Observation
+      │
+Extractor
+      │
+World Model
+      │
+Query Layer
+      │
+SLM
+      │
+Action
+      │
+Updater
+      │
+TextWorld
+```
+
+## 2. Quick Start (2 minutes)
+
+Run the agent on a local machine using Ollama.
+
+```bash
+git clone https://github.com/yourusername/world-model-agent.git
+cd world-model-agent
+pip install -r requirements.txt
+ollama pull gemma2:2b
+ollama serve
+
+# Validate environment and run smoke test
+python scripts/validate_submission.py
+
+# Run the live demo
+./scripts/run_demo.sh
+```
+
+## 3. Installation
+
+Requires Python 3.10+.
+```bash
+pip install -r requirements.txt
+```
+
+## 4. Local LLM Setup
+
+We recommend `gemma2:2b` via Ollama for the best balance of speed and reasoning on local hardware.
+- Model: `gemma2:2b`
+- Backend: Ollama
+- Temperature: 0.2
+- Context Window: 4096
+
+## 5. Validation Script
+
+The `validate_submission.py` script automatically verifies that your local environment is correctly configured (Ollama running, model downloaded, TextWorld installed, demo game exists) and performs a headless smoke test of the core modules.
+
+```bash
+python scripts/validate_submission.py
+```
+
+## 6. Run Demo
+
+The primary entrypoint for the hackathon is `scripts/demo_live_textworld.py`, easily launched via the wrapper:
+
+```bash
+./scripts/run_demo.sh
+```
+
+## 7. World Model Explanation
+
+The World Model is a persistent graph store representing the physical state of the TextWorld environment. Instead of passing massive blocks of historical conversation text to the SLM, the Extractor translates raw observations into `(Subject, Relation, Object)` triples. The Updater applies belief revision logic (e.g., removing a "closed" property when a door is opened). Finally, the Query Layer isolates only the immediate surrounding context (a minimal sub-graph) to construct an ultra-efficient prompt for the SLM.
+
+## 8. Examples
+
+Check the `examples/` directory for reference artifacts from successful runs:
+- `demo.z8`: The TextWorld game used for the live demo.
+- `expected_world_model.json`: A snapshot of a successfully populated graph.
+- `demo_output.txt`: An expected execution trace.
+
+## 9. Design Decisions
+
+Please see [DECISIONS.md](DECISIONS.md) for a concise breakdown of why we chose a graph-based world model over conversation history, and why we decoupled extraction from action selection.
+
+## 10. Limitations
+
+Please see the Known Limitations section in [SUBMISSION.md](SUBMISSION.md).
+
+## 11. Repository Layout
+
+Please see [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for a map of the repository modules.

@@ -1,0 +1,49 @@
+Objective:
+Put the apple in the fridge.
+
+Observation:
+You are in the Kitchen. You see a fridge here. The fridge is closed. There is an apple on the floor.
+
+↓
+[World Model Updated]
+Added node: kitchen
+Added node: fridge (closed)
+Added node: apple
+Added edge: kitchen -> contains -> fridge
+Added edge: kitchen -> contains -> apple
+
+↓
+[Query]
+Context retrieved:
+- You are in kitchen.
+- kitchen contains fridge.
+- fridge is closed.
+- kitchen contains apple.
+
+↓
+[SLM Decision]
+> open fridge
+
+↓
+[World Model Updated]
+Updated node: fridge (open)
+
+↓
+[SLM Decision]
+> take apple
+
+↓
+[World Model Updated]
+Updated edge: inventory -> contains -> apple
+Removed edge: kitchen -> contains -> apple
+
+↓
+[SLM Decision]
+> put apple in fridge
+
+↓
+[World Model Updated]
+Added edge: fridge -> contains -> apple
+Removed edge: inventory -> contains -> apple
+
+SUCCESS

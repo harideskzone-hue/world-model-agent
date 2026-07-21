@@ -1,0 +1,40 @@
+{
+  "nodes": {
+    "kitchen": {
+      "id": "kitchen",
+      "type": "room",
+      "properties": {
+        "name": "kitchen",
+        "visited": true
+      }
+    },
+    "fridge": {
+      "id": "fridge",
+      "type": "container",
+      "properties": {
+        "name": "fridge",
+        "state": "closed"
+      }
+    },
+    "apple": {
+      "id": "apple",
+      "type": "item",
+      "properties": {
+        "name": "apple",
+        "edible": true
+      }
+    }
+  },
+  "edges": [
+    {
+      "source": "kitchen",
+      "target": "fridge",
+      "relation": "contains"
+    },
+    {
+      "source": "kitchen",
+      "target": "apple",
+      "relation": "contains"
+    }
+  ]
+}
