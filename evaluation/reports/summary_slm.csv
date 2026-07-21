@@ -1,0 +1,4 @@
+tier,seed,won,score,max_score,turns,elapsed_s,baseline_won
+1,42,False,0,1,30,19.18,False
+2,42,False,0,1,30,16.67,False
+3,42,False,0,1,30,9.26,False

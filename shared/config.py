@@ -9,17 +9,19 @@ from dataclasses import dataclass, field
 from typing import Dict
 
 
+import os
+
 @dataclass
 class SLMConfig:
     """Configuration for the small language model."""
-    model_name: str = "qwen2.5:4b"
-    fallback_model: str = "gemma2:2b"
+    model_name: str = field(default_factory=lambda: os.getenv("OLLAMA_MODEL", "qwen2.5:3b"))
+    fallback_model: str = field(default_factory=lambda: os.getenv("OLLAMA_FALLBACK", "qwen2.5:3b"))
     backend: str = "ollama"                         # "ollama" | "llamacpp"
-    base_url: str = "http://localhost:11434"         # Ollama default
+    base_url: str = field(default_factory=lambda: os.getenv("OLLAMA_ENDPOINT", "http://localhost:11434"))
     temperature_decision: float = 0.3               # For action selection
     temperature_extraction: float = 0.1             # For fact extraction (near-deterministic)
     max_tokens: int = 100                           # Max output tokens per call
-    timeout_seconds: float = 8.0                    # Per-call timeout
+    timeout_seconds: float = float(os.getenv("OLLAMA_TIMEOUT", "15.0"))
     max_retries: int = 3                            # Retries on malformed output
 
 

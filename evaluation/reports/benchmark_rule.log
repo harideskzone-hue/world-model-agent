@@ -1,0 +1,8 @@
+Benchmark started: 2026-07-21T11:47:00.511263Z
+Tiers: [1]  Seeds: [42]
+Total games: 1
+
+[1/1] Tier 1, Seed 42: ❌ lost score=0/1 turns=30 time=0.89s
+
+Benchmark finished: 2026-07-21T11:47:02.469108Z
+Errors: 0/1

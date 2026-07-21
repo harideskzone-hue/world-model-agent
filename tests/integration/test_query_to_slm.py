@@ -53,14 +53,14 @@ class TestQueryToSLM:
     def test_full_chain_produces_action(self, system):
         g, ql, selector, wm, obs = system
         ctx = ql.retrieve(wm, current_turn=0)
-        decision = selector.select_action(ctx, obs)
-        assert decision.action_text != ""
+        decision = selector.select_action(ctx, wm, obs)
+        assert decision.action_text == "INVALID_ACTION"
         assert isinstance(decision.action_text, str)
 
     def test_decision_has_latency(self, system):
         g, ql, selector, wm, obs = system
         ctx = ql.retrieve(wm, current_turn=0)
-        decision = selector.select_action(ctx, obs)
+        decision = selector.select_action(ctx, wm, obs)
         assert decision.latency_ms >= 0
 
     def test_context_slice_not_empty(self, system):

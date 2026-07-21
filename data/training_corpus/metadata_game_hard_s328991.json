@@ -1,0 +1,16 @@
+{
+  "game_id": "game_hard_s328991",
+  "difficulty": "hard",
+  "rooms": 10,
+  "objects": 10,
+  "quest_length": 6,
+  "seed": 328991,
+  "walkthrough": [
+    "go south",
+    "go east",
+    "go north",
+    "take salad",
+    "go south",
+    "eat salad"
+  ]
+}

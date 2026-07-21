@@ -1,0 +1,12 @@
+{
+  "game_id": "game_easy_s256976",
+  "difficulty": "easy",
+  "rooms": 2,
+  "objects": 2,
+  "quest_length": 2,
+  "seed": 256976,
+  "walkthrough": [
+    "go south",
+    "insert worm into trunk"
+  ]
+}

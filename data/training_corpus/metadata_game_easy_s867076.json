@@ -1,0 +1,12 @@
+{
+  "game_id": "game_easy_s867076",
+  "difficulty": "easy",
+  "rooms": 2,
+  "objects": 2,
+  "quest_length": 2,
+  "seed": 867076,
+  "walkthrough": [
+    "open drawer",
+    "take iron from drawer"
+  ]
+}

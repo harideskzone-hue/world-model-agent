@@ -26,6 +26,9 @@ from world_model.graph_store import InMemoryGraphStore
 from extractor.text_extractor import TextExtractor
 from updater.updater import Updater
 from query_layer.query_layer import QueryLayer
+from slm.model_runner import SLMRunner
+from slm.action_selector import ActionSelector
+import argparse
 from slm.action_selector import ActionSelector
 from orchestrator.working_memory import WorkingMemoryBuilder
 from orchestrator.objective_parser import ObjectiveParser
@@ -91,18 +94,26 @@ def _parse_direction_from_target(target: str, edge_direction: str | None) -> str
     return edge_direction or "unknown"
 
 
+def _has_failed(obs_text: str) -> bool:
+    """Check if the observation indicates the last action failed."""
+    failure_indicators = [
+        "you can't", "you don't", "there is no", "that's not",
+        "i don't understand", "isn't open", "is already open",
+        "is locked", "is closed", "nothing happens",
+        "doesn't seem to", "what do you want to", "which do you mean",
+        "can't go", "not a verb", "doesn't open", "already closed",
+        "don't see", "you need to", "can't see any such thing",
+        "fixed in place", "that's fixed", "only understood you"
+    ]
+    obs_lower = obs_text.lower()
+    return any(ind in obs_lower for ind in failure_indicators)
+
+
 def record_failure(obs_text: str, action: str, subgoal_index: int = -1):
     """Record if the last action failed based on TextWorld response."""
     global _consecutive_failures, _last_action
-    failure_indicators = [
-        "you can't", "can't go", "nothing happens", "don't understand",
-        "not a verb", "doesn't open", "already open", "already closed",
-        "don't see", "you need to", "can't see any such thing",
-        "fixed in place", "that's fixed",  # TextWorld: immovable objects
-        "only understood you",  # TextWorld: malformed command
-    ]
-    obs_lower = obs_text.lower()
-    if any(ind in obs_lower for ind in failure_indicators):
+    
+    if _has_failed(obs_text):
         _failed_actions.add(action)
         _consecutive_failures += 1
         # Track per-sub-goal failures for skip logic
@@ -396,7 +407,7 @@ def _find_alternative(
     return "look", "Stuck — resetting observation"
 
 
-def run_demo():
+def run_demo(policy: str = "rule"):
     print(f"\n{DIVIDER}")
     print("  🧪 LIVE TextWorld — Semantic Action Prediction Demo")
     print(f"{DIVIDER}")
@@ -410,22 +421,25 @@ def run_demo():
     print(f"  Game: {game_file}")
 
     # ── Start environment ──
-    request_infos = EnvInfos(
-        feedback=True, description=True, inventory=True,
-        location=True, won=True, lost=True,
-        score=True, max_score=True, objective=True,
-        admissible_commands=True,  # Eval-only comparison
-    )
-    env = textworld.start(game_file, request_infos)
-    game_state = env.reset()
+    game_path = generate_game()
+    env = TextWorldWrapper(game_path)
+    obs = env.reset()
 
     # ── Initialize pipeline ──
     graph = InMemoryGraphStore()
     extractor = TextExtractor(slm_runner=None)
     updater = Updater(graph)
-    query_layer = QueryLayer(graph)
     wm_builder = WorkingMemoryBuilder(graph)
     obj_parser = ObjectiveParser()
+    
+    slm_runner = None
+    action_selector = None
+    if policy == "slm":
+        slm_runner = SLMRunner()
+        if not slm_runner.is_available():
+            print(f"❌ Error: Ollama is not available or model '{slm_runner._config.model_name}' is missing.")
+            exit(1)
+        action_selector = ActionSelector(slm_runner)
 
     obs = create_observation(game_state, turn_id=0)
     admissible = game_state.get("admissible_commands", [])
@@ -525,18 +539,42 @@ def run_demo():
         print(f"  🧠 World model: {stats.total_nodes} nodes, "
               f"{stats.active_edges} active edges")
 
-        # 6. Semantic action prediction
-        action, reason = semantic_action(obj_parser, graph, obs)
+        # 6. Retrieve context for SLM
+        context_slice = QueryLayer(graph).retrieve(wm, turn)
 
+        # 7. Action Selection
+        print(f"\n  [ACTION SELECTION - Policy: {policy.upper()}]")
+        t0 = time.perf_counter()
+        
         current_sg = obj_parser.get_current_subgoal()
+        if policy == "slm":
+            wm.current_sub_goal = current_sg.action if current_sg else ""
+            slm_decision = action_selector.select_action(context_slice, wm, obs)
+            action = slm_decision.action_text
+            reason = slm_decision.raw_output
+            latency = slm_decision.latency_ms
+            
+            if action == "INVALID_ACTION":
+                print(f"  ❌ SLM failed to produce valid action. Terminating.")
+                break
+        else:
+            action, reason = semantic_action(obj_parser, graph, obs)
+            latency = (time.perf_counter() - t0) * 1000
+
         print(f"\n  ┌{'─'*68}┐")
         if current_sg:
             print(f"  │ SUB-GOAL: {current_sg.action:<56}│")
         print(f"  │ ACTION:   {action:<56}│")
-        print(f"  │ REASON:   {reason[:56]:<56}│")
+        if policy == "slm":
+            print(f"  │ REASON:   [See raw SLM output below]{' '*31}│")
+        else:
+            print(f"  │ REASON:   {reason[:56]:<56}│")
         print(f"  └{'─'*68}┘")
+        if policy == "slm":
+            print(f"\n  🧠 Raw SLM Output:\n{reason.strip()}\n")
+        print(f"  ⏱️  Latency: {latency:.0f}ms")
 
-        # 7. Show what TextWorld considers valid (for comparison)
+        # 7b. Show what TextWorld considers valid (for comparison)
         admissible = game_state.get("admissible_commands", [])
         is_valid = action in admissible
         marker = "✅" if is_valid else "⚠️"
@@ -584,4 +622,8 @@ def run_demo():
 
 
 if __name__ == "__main__":
-    run_demo()
+    parser = argparse.ArgumentParser(description="Live Demo")
+    parser.add_argument("--policy", choices=["rule", "slm"], default="rule", help="Action selection policy")
+    args = parser.parse_args()
+    
+    run_demo(policy=args.policy)

@@ -1,0 +1,37 @@
+{
+  "task_success_rate": {
+    "tier1": 0.0,
+    "tier2": 0.0,
+    "tier3": 0.0
+  },
+  "state_tracking_precision": 1.0,
+  "state_tracking_recall": 1.0,
+  "contradiction_handling_pass_rate": 1.0,
+  "memory_growth_kb_per_turn": 0.3906,
+  "context_efficiency_pct_of_budget": 0.0195,
+  "avg_latency_seconds": 0.0005,
+  "slm_invalid_action_rate": 0.0,
+  "slm_avg_retry_rate": 0.0,
+  "slm_avg_response_tokens": 0.0,
+  "slm_repeated_action_rate": 0.9667,
+  "goal_completion_rate": 0.0,
+  "optimality_gap_proxy_turns": 30.0,
+  "model_size_compliant": true,
+  "total_games": 1,
+  "total_wins": 0,
+  "overall_success_rate": 0.0,
+  "seen_games_success_rate": 0.0,
+  "unseen_games_success_rate": 0.0,
+  "baseline_comparison": {
+    "our_agent": {
+      "task_success_rate": 0.0,
+      "precision": 1.0,
+      "latency_s": 0.0005
+    },
+    "baseline_full_history": {
+      "task_success_rate": 0.0,
+      "precision": 1.0,
+      "latency_s": 0.0021
+    }
+  }
+}

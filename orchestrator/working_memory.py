@@ -40,6 +40,7 @@ class WorkingMemoryBuilder:
         self._recent_observations: deque = deque(
             maxlen=self._config.working_memory_observation_window
         )
+        self._failed_actions: deque = deque(maxlen=10)
         self._current_sub_goal: str = ""
         self._objective: str = ""
 
@@ -54,9 +55,15 @@ class WorkingMemoryBuilder:
             current_room_facts=room_facts,
             inventory_facts=inventory,
             recent_observations=list(self._recent_observations),
+            failed_actions=list(self._failed_actions),
             current_sub_goal=self._current_sub_goal,
             objective=self._objective,
         )
+
+    def add_failed_action(self, action: str) -> None:
+        """Record an action that failed so the agent avoids repeating it."""
+        if action:
+            self._failed_actions.append(action)
 
     def add_observation(self, text: str) -> None:
         """Add a raw observation to the recent history."""

@@ -271,6 +271,7 @@ class WorkingMemory:
     current_room_facts: List[Edge] = field(default_factory=list)
     inventory_facts: List[Edge] = field(default_factory=list)
     recent_observations: List[str] = field(default_factory=list)  # Last 3 turns
+    failed_actions: List[str] = field(default_factory=list)       # History of failed actions to avoid repeating
     current_sub_goal: str = ""
     objective: str = ""
 

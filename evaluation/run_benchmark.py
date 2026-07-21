@@ -35,6 +35,9 @@ from world_model.graph_store import InMemoryGraphStore
 from extractor.text_extractor import TextExtractor
 from updater.updater import Updater
 from query_layer.query_layer import QueryLayer
+from slm.model_runner import SLMRunner
+from slm.action_selector import ActionSelector
+from shared.config import DEFAULT_CONFIG
 from orchestrator.working_memory import WorkingMemoryBuilder
 from orchestrator.objective_parser import ObjectiveParser
 from env.textworld_wrapper import TextWorldWrapper
@@ -90,10 +93,13 @@ def _reset_demo_state():
     _demo._last_room = ""
 
 
-def run_one_game(game_path: str, seed: int, tier: int) -> tuple[EpisodeResult, list[TurnLog]]:
+def run_one_game(
+    game_path: str, seed: int, tier: int, policy: str
+) -> tuple[EpisodeResult, list[TurnLog]]:
     """
-    Run the World-Model Agent using the same semantic pipeline as demo_live_textworld.py.
-    Uses InMemoryGraphStore + ObjectiveParser + semantic_action() — no SLM required.
+    Run the World-Model Agent.
+    If policy == 'slm', uses ActionSelector and Qwen2.5.
+    If policy == 'rule', uses the legacy semantic_action().
     """
     _reset_demo_state()
 
@@ -111,6 +117,12 @@ def run_one_game(game_path: str, seed: int, tier: int) -> tuple[EpisodeResult, l
     updater = Updater(graph)
     wm_builder = WorkingMemoryBuilder(graph)
     obj_parser = ObjectiveParser()
+    
+    slm_runner = None
+    action_selector = None
+    if policy == "slm":
+        slm_runner = SLMRunner()
+        action_selector = ActionSelector(slm_runner)
 
     obs = _demo.create_observation(game_state, turn_id=0)
     obj_parser.parse(obs.objective)
@@ -133,9 +145,9 @@ def run_one_game(game_path: str, seed: int, tier: int) -> tuple[EpisodeResult, l
         latency = (time.perf_counter() - t0) * 1000
 
         # Sub-goal completion check
+        current_sg = obj_parser.get_current_subgoal()
         if turn > 0:
             obs_text = (obs.feedback or "") + " " + (obs.description or "")
-            current_sg = obj_parser.get_current_subgoal()
             if current_sg and re.match(r"go \w+", current_sg.action):
                 banner_m = re.search(r"-=\s*(.+?)\s*=-", obs.description or obs.feedback or "")
                 room_now = banner_m.group(1).strip().lower() if banner_m else ""
@@ -146,9 +158,28 @@ def run_one_game(game_path: str, seed: int, tier: int) -> tuple[EpisodeResult, l
                 obj_parser.advance_if_completed(obs_text)
 
         # Semantic action selection
-        action, reason = _demo.semantic_action(obj_parser, graph, obs)
+        if policy == "slm":
+            wm.current_sub_goal = current_sg.action if current_sg else ""
+            
+            # SLM-Only Semantic Reasoning Integration
+            slm_decision = action_selector.select_action(context_slice, wm, obs)
+            action = slm_decision.action_text
+            latency = slm_decision.latency_ms
+            
+            # Action Validator: Terminate if invalid
+            if action == "INVALID_ACTION":
+                print(f"[{turn+1}/{MAX_TURNS}] ❌ SLM failed to produce valid action. Terminating.")
+                break
+        else:
+            action, reason = _demo.semantic_action(obj_parser, graph, obs)
+            slm_decision = SLMDecision(action_text=action, latency_ms=latency)
 
-        slm_decision = SLMDecision(action_text=action, latency_ms=latency)
+        # Track failure for SLM memory
+        if policy == "slm":
+            feedback_text = (obs.feedback or "") + " " + (obs.description or "")
+            if _demo._has_failed(feedback_text):
+                wm_builder.add_failed_action(action)
+
         turn_log = TurnLog(
             turn_id=turn, observation=obs,
             extracted_facts=candidates, update_report=update_report,
@@ -227,11 +258,11 @@ def run_baseline_game(game_path: str) -> tuple[EpisodeResult, list[TurnLog]]:
 
 # ── Main benchmark loop ───────────────────────────────────────────────────────
 
-def run_benchmark(tiers: list[int] | None = None, dry_run: bool = False):
+def run_benchmark(tiers: list[int] | None = None, dry_run: bool = False, policy: str = "rule"):
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     GAMES_DIR.mkdir(parents=True, exist_ok=True)
-    log_path = REPORTS_DIR / "benchmark.log"
-    csv_path = REPORTS_DIR / "summary.csv"
+    log_path = REPORTS_DIR / f"benchmark_{policy}.log"
+    csv_path = REPORTS_DIR / f"summary_{policy}.csv"
 
     active_tiers = tiers or list(TIER_CONFIGS.keys())
     active_seeds = [42] if dry_run else SEEDS
@@ -260,7 +291,7 @@ def run_benchmark(tiers: list[int] | None = None, dry_run: bool = False):
                     game_path = generate_game(seed, tier, GAMES_DIR)
                     logger.info(f"{tag} — running agent...")
                     t_start = time.perf_counter()
-                    result, turn_logs = run_one_game(game_path, seed, tier)
+                    result, turn_logs = run_one_game(game_path, seed, tier, policy)
                     elapsed = round(time.perf_counter() - t_start, 2)
 
                     results_by_tier[tier].append(result)
@@ -304,7 +335,7 @@ def run_benchmark(tiers: list[int] | None = None, dry_run: bool = False):
         results_by_tier, all_turn_logs,
         baseline_by_tier, baseline_turn_logs,
     )
-    json_path = REPORTS_DIR / "latest.json"
+    json_path = REPORTS_DIR / f"latest_{policy}.json"
     with open(json_path, "w") as f:
         json.dump(report, f, indent=2)
 
@@ -328,7 +359,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Track 1 Benchmark")
     parser.add_argument("--dry-run", action="store_true", help="1 game only (fast test)")
     parser.add_argument("--tier", type=int, choices=[1, 2, 3], help="Run only this tier")
+    parser.add_argument("--policy", choices=["rule", "slm"], default="rule", help="Action selection policy")
     args = parser.parse_args()
 
+    # Check SLM availability if SLM policy is requested
+    if args.policy == "slm":
+        from slm.model_runner import SLMRunner
+        runner = SLMRunner()
+        if not runner.is_available():
+            print(f"❌ Error: Ollama is not available or model '{runner._config.model_name}' is missing.")
+            print("Please start Ollama and ensure the model is pulled.")
+            exit(1)
+
     tiers = [args.tier] if args.tier else None
-    run_benchmark(tiers=tiers, dry_run=args.dry_run)
+    run_benchmark(tiers=tiers, dry_run=args.dry_run, policy=args.policy)

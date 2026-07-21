@@ -1,0 +1,12 @@
+{
+  "total_games": 10,
+  "difficulty_distribution": {
+    "easy": "30.0%",
+    "medium": "60.0%",
+    "hard": "10.0%",
+    "expert": "0.0%"
+  },
+  "avg_rooms": 4.6,
+  "avg_objects": 4.6,
+  "avg_quest_length": 3.6
+}

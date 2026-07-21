@@ -1,0 +1,12 @@
+{
+  "game_id": "game_easy_s812297",
+  "difficulty": "easy",
+  "rooms": 2,
+  "objects": 2,
+  "quest_length": 2,
+  "seed": 812297,
+  "walkthrough": [
+    "take worm from safe",
+    "insert worm into trunk"
+  ]
+}

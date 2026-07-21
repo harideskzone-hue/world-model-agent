@@ -1,0 +1,14 @@
+{
+  "game_id": "game_medium_s40090",
+  "difficulty": "medium",
+  "rooms": 5,
+  "objects": 5,
+  "quest_length": 4,
+  "seed": 40090,
+  "walkthrough": [
+    "unlock soap scented box with soap scented latchkey",
+    "open soap scented box",
+    "take keycard from soap scented box",
+    "lock chest with keycard"
+  ]
+}

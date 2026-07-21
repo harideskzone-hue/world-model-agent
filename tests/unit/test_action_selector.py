@@ -6,7 +6,7 @@
 
 import pytest
 
-from shared.models import Observation, ContextSlice, Edge
+from shared.models import Observation, ContextSlice, Edge, WorkingMemory
 from shared.enums import RelationType, ExtractionMethod
 from slm.action_selector import ActionSelector
 from slm.action_grammar import ActionGrammar
@@ -40,6 +40,13 @@ def observation():
     )
 
 
+@pytest.fixture
+def working_memory():
+    return WorkingMemory(
+        current_room="kitchen",
+        current_sub_goal="take brass key"
+    )
+
 # ═══════════════════════════════════════════════════════════════════════════
 # ACTION GRAMMAR
 # ═══════════════════════════════════════════════════════════════════════════
@@ -64,20 +71,10 @@ class TestActionGrammar:
 # ═══════════════════════════════════════════════════════════════════════════
 
 class TestActionSelectorNoSLM:
-    def test_returns_valid_action(self, context_slice, observation):
+    def test_returns_invalid_action(self, context_slice, working_memory, observation):
         selector = ActionSelector(slm=None)
-        decision = selector.select_action(context_slice, observation)
-        assert decision.action_text != ""
-        assert isinstance(decision.action_text, str)
-
-    def test_heuristic_fallback_is_look(self, context_slice, observation):
-        selector = ActionSelector(slm=None)
-        decision = selector.select_action(context_slice, observation)
-        assert decision.action_text == "look"
-
-    def test_latency_recorded(self, context_slice, observation):
-        selector = ActionSelector(slm=None)
-        decision = selector.select_action(context_slice, observation)
+        decision = selector.select_action(context_slice, working_memory, observation)
+        assert decision.action_text == "INVALID_ACTION"
         assert decision.latency_ms >= 0
 
 
@@ -101,9 +98,9 @@ class TestActionParsing:
         result = selector._parse_action('"take apple"')
         assert result == "take apple"
 
-    def test_parse_multiline_takes_first(self):
+    def test_parse_multiline_takes_last_valid(self):
         selector = ActionSelector(slm=None)
-        result = selector._parse_action("go north\nThis is because...")
+        result = selector._parse_action("I think I should go north because of the map.\ngo north")
         assert result == "go north"
 
     def test_parse_direction_normalized(self):

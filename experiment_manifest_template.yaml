@@ -1,0 +1,49 @@
+experiment_id: EXP-001
+status: "pending"
+description: "Tiny overfitting test to verify adapter logic"
+git_commit: ""
+timestamp: ""
+random_seed: 42
+
+hardware:
+  device: "Apple M1"
+  memory_gb: 16
+
+model:
+  base_model: "Qwen/Qwen2.5-0.5B-Instruct"
+
+adapter:
+  lora_r: 16
+  lora_alpha: 32
+  target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+
+prompt:
+  use_metadata: false
+
+dataset:
+  train_split: "train.jsonl"
+  val_split: "val.jsonl"
+  train_examples: 0
+  validation_examples: 0
+
+hyperparameters:
+  learning_rate: 2e-5
+  epochs: 10
+  batch_size: 2
+  gradient_accumulation: 4
+
+results:
+  train_loss: null
+  validation_loss: null
+  exact_action_match: null
+  mean_latency_ms: null
+  trajectory_efficiency: null
+  adapter_saved: null
+  adapter_reloaded: null
+
+notes: |
+  Tiny overfitting test pending.
+
+artifacts:
+  adapter_path: null
+  training_log: null

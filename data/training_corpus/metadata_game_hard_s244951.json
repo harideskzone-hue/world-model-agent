@@ -1,0 +1,16 @@
+{
+  "game_id": "game_hard_s244951",
+  "difficulty": "hard",
+  "rooms": 10,
+  "objects": 10,
+  "quest_length": 6,
+  "seed": 244951,
+  "walkthrough": [
+    "open gateway",
+    "go south",
+    "go south",
+    "go west",
+    "open portmanteau",
+    "insert insect into portmanteau"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "game_id": "game_medium_s861246",
+  "difficulty": "medium",
+  "rooms": 5,
+  "objects": 5,
+  "quest_length": 4,
+  "seed": 861246,
+  "walkthrough": [
+    "unlock rectangular chest with rectangular key",
+    "open rectangular chest",
+    "take keycard from rectangular chest",
+    "unlock locker with keycard"
+  ]
+}

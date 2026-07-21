@@ -15,7 +15,7 @@ from shared.enums import ExtractionMethod, ExtractionType, RelationType, EdgeSta
 from evaluation.metrics import (
     task_success_rate, state_tracking_precision, state_tracking_recall,
     contradiction_handling_pass_rate, memory_growth_kb_per_turn,
-    context_efficiency, avg_latency_seconds, compile_report,
+    context_efficiency_pct_of_budget, avg_latency_seconds, compile_report,
 )
 
 REPORTS_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'evaluation', 'reports')

@@ -1,0 +1,14 @@
+{
+  "game_id": "game_medium_s160545",
+  "difficulty": "medium",
+  "rooms": 5,
+  "objects": 5,
+  "quest_length": 4,
+  "seed": 160545,
+  "walkthrough": [
+    "unlock TextWorld style box with TextWorld style latchkey",
+    "open TextWorld style box",
+    "take cookie from TextWorld style box",
+    "eat cookie"
+  ]
+}

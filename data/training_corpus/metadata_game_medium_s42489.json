@@ -1,0 +1,14 @@
+{
+  "game_id": "game_medium_s42489",
+  "difficulty": "medium",
+  "rooms": 5,
+  "objects": 5,
+  "quest_length": 4,
+  "seed": 42489,
+  "walkthrough": [
+    "unlock cuboid safe with cuboid passkey",
+    "open cuboid safe",
+    "take fork from cuboid safe",
+    "put fork on pan"
+  ]
+}

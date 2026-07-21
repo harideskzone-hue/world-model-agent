@@ -1,0 +1,14 @@
+{
+  "game_id": "game_medium_s519579",
+  "difficulty": "medium",
+  "rooms": 5,
+  "objects": 5,
+  "quest_length": 4,
+  "seed": 519579,
+  "walkthrough": [
+    "go west",
+    "open box",
+    "take shirt from box",
+    "put shirt on shelf"
+  ]
+}

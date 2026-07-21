@@ -1,0 +1,12 @@
+{
+  "game_id": "game_easy_s574055",
+  "difficulty": "easy",
+  "rooms": 2,
+  "objects": 2,
+  "quest_length": 2,
+  "seed": 574055,
+  "walkthrough": [
+    "take staple from armchair",
+    "put staple on bookshelf"
+  ]
+}

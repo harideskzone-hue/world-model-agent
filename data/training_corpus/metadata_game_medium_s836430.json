@@ -1,0 +1,14 @@
+{
+  "game_id": "game_medium_s836430",
+  "difficulty": "medium",
+  "rooms": 5,
+  "objects": 5,
+  "quest_length": 4,
+  "seed": 836430,
+  "walkthrough": [
+    "go west",
+    "take sandwich from case",
+    "go east",
+    "eat sandwich"
+  ]
+}

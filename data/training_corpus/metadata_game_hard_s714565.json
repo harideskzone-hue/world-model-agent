@@ -1,0 +1,16 @@
+{
+  "game_id": "game_hard_s714565",
+  "difficulty": "hard",
+  "rooms": 10,
+  "objects": 10,
+  "quest_length": 6,
+  "seed": 714565,
+  "walkthrough": [
+    "go south",
+    "go east",
+    "open type C locker",
+    "take passkey from type C locker",
+    "unlock chest with passkey",
+    "open chest"
+  ]
+}

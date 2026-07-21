@@ -116,14 +116,29 @@ class DecisionLoop:
 
             # ── 5. Select action ──
             slm_decision = self._action_selector.select_action(
-                context_slice, obs,
+                context_slice, working_memory, obs
             )
+
+            if slm_decision.action_text == "INVALID_ACTION":
+                logger.error("SLM produced unrecoverable invalid action. Terminating episode.")
+                done = True
+                obs.won = False
+                break
 
             # ── 6. Execute action ──
             obs, reward, done = env.step(slm_decision.action_text)
-            self._wm_builder.add_observation(
-                obs.feedback or obs.description
-            )
+            feedback = obs.feedback or obs.description
+            self._wm_builder.add_observation(feedback)
+
+            # Check if action failed
+            failure_indicators = [
+                "you can't", "can't go", "nothing happens", "don't understand",
+                "not a verb", "doesn't open", "already open", "already closed",
+                "don't see", "you need to", "can't see any such thing",
+                "fixed in place", "that's fixed", "only understood you",
+            ]
+            if any(ind in feedback.lower() for ind in failure_indicators):
+                self._wm_builder.add_failed_action(slm_decision.action_text)
 
             # ── 7. Budget enforcement ──
             turn_elapsed = time.time() - turn_start
