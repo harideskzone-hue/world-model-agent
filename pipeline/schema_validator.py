@@ -93,6 +93,30 @@ class SchemaValidator:
                 source_turn_id=turn_id,
                 confidence=0.0  # Will be assigned in the next stage
             )
+            
+            # Ontology coherency adjustments
+            if fact.subject in ("player", "me", "you") or fact.subject_type == NodeType.CHARACTER:
+                if fact.relation == RelationType.CONTAINS:
+                    fact.relation = RelationType.HOLDS
+
+            # Type-based ontology constraints (no keyword matching — uses SLM-provided types)
+            is_room_subject = (fact.subject_type == NodeType.ROOM)
+            if fact.relation in (RelationType.LOCATED_IN, RelationType.HOLDS, RelationType.CONTAINS):
+                # A room/object should not be located_in or held by the player
+                if fact.object in ("player", "me", "you") and is_room_subject:
+                    continue
+                # A room can never be located_in something else
+                if is_room_subject and fact.relation == RelationType.LOCATED_IN:
+                    continue
+
             valid_facts.append(fact)
             
+        # Intra-turn conflict deduplication: if player holds an object, ignore concurrent historical claims that an inanimate container contains it
+        held_objects = {f.object for f in valid_facts if f.relation == RelationType.HOLDS and f.subject in ("player", "me", "you")}
+        if held_objects:
+            valid_facts = [
+                f for f in valid_facts
+                if not (f.relation in (RelationType.CONTAINS, RelationType.LOCATED_IN) and f.subject not in ("player", "me", "you") and f.object in held_objects)
+            ]
+
         return valid_facts

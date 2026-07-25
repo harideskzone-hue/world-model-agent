@@ -21,7 +21,7 @@ class SLMConfig:
     temperature_decision: float = 0.3               # For action selection
     temperature_extraction: float = 0.1             # For fact extraction (near-deterministic)
     max_tokens: int = 512                           # Increased from 100 to prevent JSON truncation
-    timeout_seconds: float = float(os.getenv("OLLAMA_TIMEOUT", "15.0"))
+    timeout_seconds: float = float(os.getenv("OLLAMA_TIMEOUT", "120.0"))
     max_retries: int = 3                            # Retries on malformed output
 
 
@@ -67,7 +67,6 @@ class ExtractorConfig:
     confidence_negation: float = 0.80
     # Adjustments
     confidence_boost_slm: float = 0.05
-    confidence_penalty_rule: float = -0.10
     confidence_penalty_novel_entity: float = -0.15
     confidence_boost_navigation: float = 0.05
     # Clamp range

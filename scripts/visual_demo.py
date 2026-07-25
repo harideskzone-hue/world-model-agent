@@ -28,13 +28,29 @@ class VisualOrchestrator(Orchestrator):
         console.rule(f"[bold blue]Turn {turn_id}[/bold blue]")
         
         # Display Observation
-        desc_str = observation.description or observation.feedback or "No description available."
-        obs_text = Text(desc_str.strip(), style="green")
+        obs_parts = [observation.description or ""]
+        if getattr(observation, "inventory", "") and getattr(observation, "inventory", "").strip():
+            inv_text = observation.inventory.strip()
+            if "carrying nothing" in inv_text.lower():
+                obs_parts.append("Player Inventory: holding nothing")
+            else:
+                obs_parts.append(f"Player Inventory: {inv_text}")
+                
+        fb = getattr(observation, "feedback", "") or ""
+        fb = fb.strip()
+        if fb and fb not in (observation.description or "") and "$" not in fb and "Welcome to TextWorld" not in fb and "_ _" not in fb:
+            obs_parts.append(f"Action feedback: {fb}")
+            
+        full_text = "\n\n".join([p for p in obs_parts if p.strip()])
+        if not full_text:
+            full_text = observation.feedback or "No description available."
+        
+        obs_text = Text(full_text.strip(), style="green")
         console.print(Panel(obs_text, title="👀 Observation", border_style="green"))
         
         # 1. Extract facts from observation
         with console.status("[bold yellow]SLM Extracting Facts...[/bold yellow]"):
-            raw_text = self.preprocessor.preprocess(desc_str)
+            raw_text = self.preprocessor.preprocess(full_text)
             slm_response = self.slm_extractor.extract(raw_text)
             
             extractor_tokens = len(raw_text.split()) * 1.3

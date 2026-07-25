@@ -18,6 +18,10 @@ from world_model.schema import are_states_conflicting, is_state_relation, is_sin
 
 logger = logging.getLogger(__name__)
 
+# Ontology constants: values the SLM uses to express semantic emptiness.
+# These are schema-level constants, not keyword heuristics.
+EMPTINESS_VALUES = frozenset({"nothing", "empty", "none"})
+
 
 class ContradictionDetector:
     """
@@ -50,7 +54,18 @@ class ContradictionDetector:
         """
         candidate.subject = normalize_entity_name(candidate.subject)
         candidate.object = normalize_entity_name(candidate.object)
-        # 1. Slot lookup: find existing edges with same (subject, relation)
+        
+        # 1a. Check physical object relocation across containers/holders
+        if candidate.relation in (RelationType.HOLDS, RelationType.CONTAINS) and candidate.object not in EMPTINESS_VALUES and candidate.object != "player":
+            for existing in self._graph.get_all_active_edges():
+                if existing.relation in (RelationType.HOLDS, RelationType.CONTAINS) and existing.object == candidate.object and existing.subject != candidate.subject:
+                    return ContradictionResult(
+                        contradiction_type=ContradictionType.REVISE,
+                        existing_edge=existing,
+                        conflict_category=ConflictCategory.LOCATION_CHANGE,
+                    )
+
+        # 1b. Slot lookup: find existing edges with same (subject, relation)
         existing_edges = self._graph.get_active_edges_by_slot(
             candidate.subject, candidate.relation
         )
@@ -69,6 +84,21 @@ class ContradictionDetector:
                     contradiction_type=ContradictionType.CORROBORATE,
                     existing_edge=existing,
                 )
+
+            # 3a2. Negation / emptiness check for containers and holders
+            if candidate.relation in (RelationType.CONTAINS, RelationType.HOLDS):
+                if candidate.object in EMPTINESS_VALUES and existing.object not in EMPTINESS_VALUES:
+                    return ContradictionResult(
+                        contradiction_type=ContradictionType.REVISE,
+                        existing_edge=existing,
+                        conflict_category=ConflictCategory.VALUE_MISMATCH,
+                    )
+                elif candidate.object not in EMPTINESS_VALUES and existing.object in EMPTINESS_VALUES:
+                    return ContradictionResult(
+                        contradiction_type=ContradictionType.REVISE,
+                        existing_edge=existing,
+                        conflict_category=ConflictCategory.VALUE_MISMATCH,
+                    )
 
             # 3b. State conflict check (for has_state relations)
             if is_state_relation(candidate.relation):

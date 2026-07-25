@@ -85,7 +85,7 @@ class RawExtraction:
     object_type: Optional[str] = None
     extraction_type: str = "direct"         # "direct" | "implied" | "negation"
     source_segment: Optional[TextSegment] = None
-    extraction_method: str = "slm"          # "slm" | "rule_fallback"
+    extraction_method: str = "slm"          # "slm"
 
 
 @dataclass
@@ -101,7 +101,7 @@ class CandidateFact:
     confidence: float                       # [0.10, 0.99]
     source_turn_id: int                     # Turn that produced this
     extraction_type: ExtractionType         # DIRECT | IMPLIED | NEGATION
-    extraction_method: ExtractionMethod     # SLM | RULE_FALLBACK
+    extraction_method: ExtractionMethod     # SLM
     subject_type: Optional[NodeType] = None # Explicit node type from extractor
     object_type: Optional[NodeType] = None  # Explicit node type from extractor
 

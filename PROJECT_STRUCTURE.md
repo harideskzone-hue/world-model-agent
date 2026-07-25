@@ -41,8 +41,9 @@ world-model-agent/
 ├── scripts/
 │   # Entrypoints for execution:
 │   #  - run_demo.sh (1-command launcher)
+│   #  - visual_demo.py (rich live interactive demo loop)
+│   #  - benchmark_suite.py (automated evaluation suite)
 │   #  - validate_submission.py (sanity checker)
-│   #  - demo_live_textworld.py (core demo loop)
 │
 ├── tests/
 │   # Smoke, integration, and unit tests ensuring pipeline integrity.

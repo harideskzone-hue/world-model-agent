@@ -21,9 +21,9 @@ TextWorld environments are inherently spatial and relational (Rooms contain Cont
 The entire world model might encompass hundreds of rooms and thousands of items—far too large for a local SLM's context window. The Query Layer acts as a filter, injecting only the *locally relevant* subset of the graph (typically 1-2 hops from the agent's current location) into the prompt.
 
 ## Why a local SLM?
-Using a local SLM (e.g., `gemma2:2b` via Ollama) proves that this architecture allows highly capable autonomy without massive 100B+ parameter models. Because the context is meticulously curated by the Query Layer, the SLM only has to perform the simplest task: Next Action Prediction based on a pristine, isolated state slice.
+Using a local SLM (e.g., `qwen2.5:3b` via Ollama) proves that this architecture allows highly capable autonomy without massive 100B+ parameter models. Because the context is meticulously curated by the Query Layer, the SLM only has to perform the simplest task: Next Action Prediction based on a pristine, isolated state slice.
 
 ## Known limitations
 1. **Extraction Bottlenecks**: The system is highly dependent on the initial extraction step. If the SLM fails to extract a key object, the Updater cannot add it to the graph, and the agent becomes permanently blind to it.
-2. **Deterministic Fallbacks**: To counter extraction fragility, rule-based fallbacks are occasionally employed, which reduces the "pure neural" aspect of the pipeline.
+2. **Zero-Shot Only**: The system uses purely zero-shot SLM prompts with no few-shot examples or keyword heuristics, which maximizes generalization but may reduce recall on edge-case observations.
 3. **Graph Serialization**: Currently, the graph is serialized into a textual list of triples for the SLM prompt. While effective, a native graph-neural approach might yield better spatial reasoning in future iterations.

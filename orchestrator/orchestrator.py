@@ -104,8 +104,23 @@ class Orchestrator:
     def _run_turn(self, observation: Observation) -> Observation:
         """Execute a single turn: extract → update → query → prompt → act."""
         
-        # 1. Extract facts from observation
-        raw_text = self.preprocessor.preprocess(observation.description)
+        # 1. Extract facts from observation (including inventory and clean feedback)
+        obs_parts = [observation.description or ""]
+        if getattr(observation, "inventory", "") and getattr(observation, "inventory", "").strip():
+            inv_text = observation.inventory.strip()
+            if "carrying nothing" in inv_text.lower():
+                obs_parts.append("Player Inventory: holding nothing")
+            else:
+                obs_parts.append(f"Player Inventory: {inv_text}")
+                
+        fb = getattr(observation, "feedback", "") or ""
+        fb = fb.strip()
+        # Avoid ASCII logo banners and exact duplicates of room description
+        if fb and fb not in (observation.description or "") and "$" not in fb and "Welcome to TextWorld" not in fb and "_ _" not in fb:
+            obs_parts.append(f"Action feedback: {fb}")
+            
+        full_text = "\n\n".join([p for p in obs_parts if p.strip()])
+        raw_text = self.preprocessor.preprocess(full_text)
         
         slm_response = self.slm_extractor.extract(raw_text)
         extractor_tokens = len(raw_text.split()) * 1.3

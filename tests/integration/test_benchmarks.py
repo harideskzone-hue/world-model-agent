@@ -76,7 +76,7 @@ from unittest.mock import patch
 
 class TestBenchmarkSuite:
     @patch('slm_actions.slm_client.SLMRunner')
-    def test_benchmark_suite_with_demo_world(self, mock_slm_class):
+    def test_benchmark_suite_with_demo_world(self, mock_slm_class, tmp_path):
         """Benchmark suite runs on demo.z8 (if it exists)."""
         # Set up the mock SLM instance to return empty extractions and simple actions
         mock_slm = mock_slm_class.return_value
@@ -89,7 +89,7 @@ class TestBenchmarkSuite:
         report = run_benchmark_suite(
             world_file=demo_path,
             num_episodes=2,
-            output_csv="results/test_demo.csv"
+            output_csv=str(tmp_path / "test_demo.csv")
         )
         if report is not None:
             assert report.num_episodes == 2

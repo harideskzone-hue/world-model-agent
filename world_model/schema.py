@@ -37,7 +37,10 @@ def normalize_entity_name(name: str) -> str:
     articles = {"the", "a", "an"}
     words = name.strip().lower().split()
     words = [w for w in words if w not in articles]
-    return " ".join(words) if words else name.strip().lower()
+    res = " ".join(words) if words else name.strip().lower()
+    if res in ("you", "i", "me", "self", "agent", "player", "the player", "player's inventory"):
+        return "player"
+    return res
 
 
 def is_single_occupancy_relation(relation: RelationType) -> bool:

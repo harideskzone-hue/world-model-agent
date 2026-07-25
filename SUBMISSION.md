@@ -35,6 +35,6 @@ Check the `examples/` directory for a reference of what a successful execution l
 Please see `PROJECT_STRUCTURE.md` for a complete breakdown of how the architecture maps to the repository folders.
 
 ## 7. Known Limitations
-- The Extractor relies on a fallback heuristic rule system if the SLM fails to generate valid JSON or encounters a context boundary.
+- The Extractor relies entirely on the SLM for zero-shot structured extraction. If the SLM fails to generate valid JSON, the pipeline gracefully degrades by returning no facts for that turn.
 - Visualizations are limited to terminal output during standard runs; web UI is optional.
 - Apple Silicon (M1) may have slow inference times for larger context models.

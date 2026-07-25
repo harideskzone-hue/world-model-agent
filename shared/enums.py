@@ -15,6 +15,7 @@ class NodeType(Enum):
     ROOM = "room"
     OBJECT = "object"
     CHARACTER = "character"
+    STATE = "state"
 
 
 # ── Node / Edge Status ──────────────────────────────────────────────────────
@@ -48,19 +49,6 @@ class RelationType(Enum):
 # Set of valid relation strings for fast validation
 ALLOWED_RELATIONS: frozenset = frozenset(r.value for r in RelationType)
 
-# Mapping of common aliases to canonical relation names
-RELATION_ALIASES: Dict[str, str] = {
-    "in": "located_in",
-    "inside": "contains",
-    "has": "holds",
-    "at": "located_in",
-    "on": "contains",       # "on the table" → table contains item
-    "connected": "connects_to",
-    "leads_to": "connects_to",
-    "carrying": "holds",
-    "is": "has_state",
-    "type": "is_type",
-}
 
 
 # ── Text Segment Types (Extractor Stage 1) ─────────────────────────────────
@@ -87,7 +75,6 @@ class ExtractionType(Enum):
 class ExtractionMethod(Enum):
     """Which extraction mechanism produced a fact."""
     SLM = "slm"                     # SLM-guided structured extraction
-    RULE_FALLBACK = "rule_fallback" # Regex/rule-based fallback
 
 
 # ── State Conflicts (Mutual Exclusion Groups) ──────────────────────────────

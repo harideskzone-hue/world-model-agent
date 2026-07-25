@@ -47,11 +47,11 @@ def check_model():
         with urllib.request.urlopen(req, timeout=3) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             models = [m["name"] for m in data.get("models", [])]
-            # Check for gemma2:2b or similar
-            if any("gemma2" in m for m in models) or any("qwen" in m for m in models):
+            # Check for qwen2.5 or similar recommended models
+            if any("qwen" in m for m in models) or any("gemma2" in m for m in models):
                 print_success(f"Target model found in Ollama.")
             else:
-                print_error("No recommended model (gemma2:2b, qwen2.5) found. Run: ollama pull gemma2:2b")
+                print_error("No recommended model (qwen2.5:3b or gemma2:2b) found. Run: ollama pull qwen2.5:3b")
     except urllib.error.URLError:
         print_error("Failed to connect to Ollama.")
     except Exception as e:
@@ -59,12 +59,11 @@ def check_model():
 
 def check_demo_world():
     print_step("Checking if demo world exists...")
-    # Will check examples/demo.z8
-    world_path = os.path.join(os.path.dirname(__file__), "..", "examples", "demo.z8")
+    world_path = os.path.join(os.path.dirname(__file__), "..", "examples", "stage1.z8")
     if os.path.exists(world_path):
         print_success(f"Demo world found at {world_path}")
     else:
-        print_error(f"Demo world NOT found at {world_path}")
+        print_error(f"Demo world not found at {world_path}")
 
 def run_smoke_test():
     print_step("Running End-to-End Smoke Test...")
