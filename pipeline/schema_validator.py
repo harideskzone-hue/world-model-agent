@@ -99,11 +99,16 @@ class SchemaValidator:
                 if fact.relation == RelationType.CONTAINS:
                     fact.relation = RelationType.HOLDS
 
+            # Reject facts with empty subjects or objects
+            if not fact.object or not fact.object.strip():
+                continue
+
             # Type-based ontology constraints (no keyword matching — uses SLM-provided types)
             is_room_subject = (fact.subject_type == NodeType.ROOM)
             if fact.relation in (RelationType.LOCATED_IN, RelationType.HOLDS, RelationType.CONTAINS):
-                # A room/object should not be located_in or held by the player
-                if fact.object in ("player", "me", "you") and is_room_subject:
+                # Only ROOMs can contain the player. Objects/furniture cannot.
+                # This catches SLM errors like "chest contains player" or "counter holds player"
+                if fact.object in ("player", "me", "you") and not is_room_subject:
                     continue
                 # A room can never be located_in something else
                 if is_room_subject and fact.relation == RelationType.LOCATED_IN:

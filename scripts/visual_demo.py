@@ -38,7 +38,9 @@ class VisualOrchestrator(Orchestrator):
                 
         fb = getattr(observation, "feedback", "") or ""
         fb = fb.strip()
-        if fb and fb not in (observation.description or "") and "$" not in fb and "Welcome to TextWorld" not in fb and "_ _" not in fb:
+        # Check both directions for overlap to avoid duplicating room descriptions
+        desc_text = (observation.description or "").strip()
+        if fb and desc_text not in fb and fb not in desc_text and "$" not in fb and "Welcome to TextWorld" not in fb and "_ _" not in fb:
             obs_parts.append(f"Action feedback: {fb}")
             
         full_text = "\n\n".join([p for p in obs_parts if p.strip()])
@@ -85,6 +87,17 @@ class VisualOrchestrator(Orchestrator):
         
         # 3. Query current world state
         self.working_memory.last_observation = observation
+        # Track previous action feedback so SLM avoids repeating failed actions
+        prev_act = getattr(self.working_memory, "previous_action", "")
+        if prev_act:
+            if "(invalid grammar)" in prev_act:
+                fb_clean = "Action rejected by environment: not admissible or invalid command in this room."
+            else:
+                fb_text = getattr(observation, "feedback", "") or getattr(observation, "description", "")
+                fb_clean = (fb_text.strip() or "No immediate effect.").split("\n")[0]
+            self.working_memory.recent_observations.append(f"Tried action '{prev_act}' -> Feedback: {fb_clean}")
+            if len(self.working_memory.recent_observations) > 5:
+                self.working_memory.recent_observations.pop(0)
         context_slice = self.query_layer.retrieve(self.graph_store, self.working_memory)
         
         # 4. Build prompt
@@ -122,6 +135,7 @@ class VisualOrchestrator(Orchestrator):
         else:
             next_observation = observation
             self.metrics.record_invalid_action()
+            self.working_memory.previous_action = f"{action_string} (invalid grammar)"
             
         print("\n")
         return next_observation
