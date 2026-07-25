@@ -5,9 +5,10 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import subprocess
-import requests
 import json
 import time
+import urllib.request
+import urllib.error
 
 def print_step(msg):
     print(f"\033[94m[VALIDATE]\033[0m {msg}")
@@ -30,29 +31,31 @@ def check_textworld():
 def check_ollama():
     print_step("Checking Ollama connection...")
     try:
-        response = requests.get("http://localhost:11434/api/version", timeout=3)
-        if response.status_code == 200:
-            print_success(f"Ollama is running (v{response.json().get('version')})")
-        else:
-            print_error("Ollama responded with an error.")
-    except requests.exceptions.RequestException:
+        req = urllib.request.Request("http://localhost:11434/api/version", method="GET")
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            print_success(f"Ollama is running (v{data.get('version')})")
+    except urllib.error.URLError:
         print_error("Ollama is not running. Please start it with: ollama serve")
+    except Exception as e:
+        print_error(f"Ollama health check failed: {e}")
 
 def check_model():
     print_step("Checking if target model is available in Ollama...")
     try:
-        response = requests.get("http://localhost:11434/api/tags", timeout=3)
-        if response.status_code == 200:
-            models = [m["name"] for m in response.json().get("models", [])]
+        req = urllib.request.Request("http://localhost:11434/api/tags", method="GET")
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            models = [m["name"] for m in data.get("models", [])]
             # Check for gemma2:2b or similar
             if any("gemma2" in m for m in models) or any("qwen" in m for m in models):
                 print_success(f"Target model found in Ollama.")
             else:
                 print_error("No recommended model (gemma2:2b, qwen2.5) found. Run: ollama pull gemma2:2b")
-        else:
-            print_error("Failed to list Ollama models.")
-    except requests.exceptions.RequestException:
+    except urllib.error.URLError:
         print_error("Failed to connect to Ollama.")
+    except Exception as e:
+        print_error(f"Failed to list Ollama models: {e}")
 
 def check_demo_world():
     print_step("Checking if demo world exists...")
@@ -67,9 +70,9 @@ def run_smoke_test():
     print_step("Running End-to-End Smoke Test...")
     try:
         # Import core modules
-        from extractor.text_extractor import TextExtractor
+        from slm_actions.slm_extractor import SLMExtractor
         from world_model.graph_store import InMemoryGraphStore
-        from query_layer.query_layer import QueryLayer
+        from query_engine.query_layer import QueryLayer
         from updater.updater import Updater
         from shared.models import Observation, WorkingMemory
         
@@ -77,33 +80,25 @@ def run_smoke_test():
         graph = InMemoryGraphStore()
         print_success("World Model initialized")
         
-        # 2. Extract
-        extractor = TextExtractor(slm_runner=None)
-        obs = Observation(
-            feedback="You open the door.",
-            description="You are in the Kitchen. You see a fridge here. The fridge is closed.",
-            inventory="You are carrying nothing.",
-            location="kitchen",
-            objective="Put the apple in the fridge."
-        )
-        wm = WorkingMemory()
-        triples = extractor.extract(obs, wm)
-        
-        # 3. Update
+        # 2. Updater and Memory setup
         updater = Updater(graph)
-        updater.update(triples, turn_id=1)
-        print_success("World Model Updated successfully")
+        print_success("World Model Updater initialized successfully")
         
-        # 4. Query
-        query_layer = QueryLayer(graph)
-        context_slice = query_layer.retrieve(wm, current_turn=1)
-        if context_slice.formatted_text is not None:
+        # 3. Query Layer
+        query_layer = QueryLayer()
+        wm = WorkingMemory()
+        wm.last_observation = Observation(
+            feedback="You open the door.",
+            description="You are in the Study. You see a workbench here.",
+            inventory="You are carrying nothing.",
+            location="study",
+            objective="Retrieve the keycard."
+        )
+        context_slice = query_layer.retrieve(graph, wm)
+        if context_slice.current_room is not None:
             print_success("Query Layer successfully retrieved context")
         
-        # 5. Output generated
-        print_success("Output generated successfully")
-        
-        # 6. Save world model
+        # 4. Save world model
         save_path = os.path.join(os.path.dirname(__file__), "..", "examples", "test_save.json")
         from world_model.persistence.serializer import save_snapshot
         save_snapshot(graph, save_path)

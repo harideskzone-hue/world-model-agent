@@ -66,6 +66,8 @@ class Updater:
                 logger.error(f"Failed to process candidate {candidate}: {e}")
                 report.rejected += 1
 
+        self._graph.set_current_turn(turn_id)
+
         logger.info(
             f"Turn {turn_id}: expanded={report.expanded}, "
             f"corroborated={report.corroborated}, revised={report.revised}, "
@@ -79,11 +81,17 @@ class Updater:
         """
         Process a single candidate fact through detection and policy.
         """
-        # Ensure nodes exist
-        self._ensure_node(candidate.subject, turn_id)
-        self._ensure_node(candidate.object, turn_id, is_state_value=(
-            candidate.relation.value == "has_state"
-        ))
+        candidate.subject = normalize_entity_name(candidate.subject)
+        candidate.object = normalize_entity_name(candidate.object)
+        # Ensure nodes exist, using explicit types provided by the Extractor
+        self._ensure_node(
+            candidate.subject, turn_id, node_type=candidate.subject_type
+        )
+        self._ensure_node(
+            candidate.object, turn_id, is_state_value=(
+                candidate.relation.value == "has_state"
+            ), node_type=candidate.object_type
+        )
 
         # Detect contradiction
         result = self._detector.detect(candidate)
@@ -129,7 +137,8 @@ class Updater:
             report.revisions.append(action)
 
     def _ensure_node(
-        self, name: str, turn_id: int, is_state_value: bool = False
+        self, name: str, turn_id: int, is_state_value: bool = False,
+        node_type: NodeType | None = None
     ) -> None:
         """
         Ensure a node exists in the graph for this entity.
@@ -141,37 +150,15 @@ class Updater:
         normalized = normalize_entity_name(name)
         existing = self._graph.get_node(normalized)
         if existing is None:
-            # Infer node type heuristically
-            node_type = self._infer_node_type(normalized)
+            # Use explicit node_type from extraction, default to OBJECT if unknown
+            final_type = node_type if node_type else NodeType.OBJECT
+            
             self._graph.add_node(Node(
                 id=normalized,
                 name=name,
-                node_type=node_type,
-                confidence=0.5,  # Initial confidence for inferred nodes
+                node_type=final_type,
+                confidence=0.9,  # Initial confidence
                 first_observed_turn=turn_id,
                 last_observed_turn=turn_id,
+                corroboration_count=1,
             ))
-
-    def _infer_node_type(self, name: str) -> NodeType:
-        """
-        Heuristically infer node type from entity name.
-        This is a best-effort guess — can be corrected by future observations.
-        """
-        # Player/agent is always a character
-        if name in ("player", "agent", "you"):
-            return NodeType.CHARACTER
-
-        # Room indicators
-        room_keywords = {
-            "kitchen", "garden", "bedroom", "bathroom", "hallway",
-            "corridor", "cellar", "attic", "chamber", "room",
-            "lobby", "foyer", "pantry", "closet", "balcony",
-            "basement", "living room", "dining room",
-        }
-        name_lower = name.lower()
-        for keyword in room_keywords:
-            if keyword in name_lower:
-                return NodeType.ROOM
-
-        # Default: assume object
-        return NodeType.OBJECT

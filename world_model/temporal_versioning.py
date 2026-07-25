@@ -47,9 +47,6 @@ def extend_validity(edge: Edge, turn_id: int) -> Edge:
     """
     edge.corroboration_count += 1
     edge.t_valid_until = None  # Still active — no end
-    # Confidence boost: diminishing returns on corroboration
-    boost = 0.05 / edge.corroboration_count  # 0.05, 0.025, 0.0167, ...
-    edge.confidence = min(0.99, edge.confidence + boost)
     return edge
 
 

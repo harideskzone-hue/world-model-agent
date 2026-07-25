@@ -20,7 +20,7 @@ class SLMConfig:
     base_url: str = field(default_factory=lambda: os.getenv("OLLAMA_ENDPOINT", "http://localhost:11434"))
     temperature_decision: float = 0.3               # For action selection
     temperature_extraction: float = 0.1             # For fact extraction (near-deterministic)
-    max_tokens: int = 100                           # Max output tokens per call
+    max_tokens: int = 512                           # Increased from 100 to prevent JSON truncation
     timeout_seconds: float = float(os.getenv("OLLAMA_TIMEOUT", "15.0"))
     max_retries: int = 3                            # Retries on malformed output
 

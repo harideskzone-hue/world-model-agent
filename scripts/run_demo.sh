@@ -18,4 +18,4 @@ python3 scripts/validate_submission.py
 echo ""
 echo "Starting Demo..."
 echo "=================================================="
-python3 scripts/demo_live_textworld.py
+OLLAMA_TIMEOUT=120 python3 scripts/visual_demo.py examples/demo.z8

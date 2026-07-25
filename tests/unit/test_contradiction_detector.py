@@ -162,13 +162,13 @@ class TestUpdater:
         edges = graph.get_active_edges_by_slot("garden", RelationType.CONTAINS)
         assert any(e.object == "rose" for e in edges)
 
-    def test_corroborate_boosts_confidence(self, graph):
+    def test_corroborate_preserves_confidence(self, graph):
         updater = Updater(graph)
         original_conf = graph._edges["e1"].confidence
         candidates = [make_candidate("kitchen", RelationType.CONTAINS, "brass key")]
         report = updater.update(candidates, turn_id=5)
         assert report.corroborated == 1
-        assert graph._edges["e1"].confidence >= original_conf
+        assert graph._edges["e1"].confidence == original_conf
 
     def test_supersede_changes_state(self, graph):
         updater = Updater(graph)

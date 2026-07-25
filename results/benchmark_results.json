@@ -1,0 +1,14 @@
+{
+  "games_played": 20,
+  "success_rate": 0.0,
+  "average_steps": 50,
+  "invalid_action_rate": 0.0,
+  "extraction_success_rate": 1.0,
+  "average_extraction_latency_ms": 0.18695640563964844,
+  "average_action_latency_ms": 0.04566359519958496,
+  "average_prompt_size_tokens": 4.925,
+  "average_world_slice_facts": 0.985,
+  "average_world_model_nodes": 2,
+  "average_wm_accuracy": 0.14583251908909803,
+  "belief_revisions": 0
+}

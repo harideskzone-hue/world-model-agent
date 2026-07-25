@@ -49,6 +49,10 @@ class GraphStoreBase(ABC):
     def corroborate_edge(self, edge_id: str, turn_id: int) -> None:
         """Increase confidence and corroboration count of an existing edge."""
 
+    @abstractmethod
+    def set_current_turn(self, turn_id: int) -> None:
+        """Update current turn after facts are processed."""
+
     # ── Read Operations ──
 
     @abstractmethod
@@ -120,10 +124,15 @@ class InMemoryGraphStore(GraphStoreBase):
         self._subject_index: Dict[str, Set[str]] = defaultdict(set)
         self._object_index: Dict[str, Set[str]] = defaultdict(set)
         self._slot_index: Dict[Tuple[str, RelationType], Set[str]] = defaultdict(set)
+        self.current_turn: int = 0
 
     # ═══════════════════════════════════════════════════════════════════════
     # WRITE OPERATIONS
     # ═══════════════════════════════════════════════════════════════════════
+
+    def set_current_turn(self, turn_id: int) -> None:
+        """Update current turn after facts are processed."""
+        self.current_turn = turn_id
 
     def add_node(self, node: Node) -> str:
         """
@@ -137,7 +146,6 @@ class InMemoryGraphStore(GraphStoreBase):
                 existing.last_observed_turn, node.last_observed_turn
             )
             existing.corroboration_count += 1
-            existing.confidence = min(0.99, existing.confidence + 0.02)
             if node.status == NodeStatus.ACTIVE:
                 existing.status = NodeStatus.ACTIVE
             # Merge attributes (new values take precedence)
@@ -152,6 +160,8 @@ class InMemoryGraphStore(GraphStoreBase):
         Add a new edge to the graph. Never overwrites existing edges.
         Updates all indexes.
         """
+        edge.subject = normalize_entity_name(edge.subject)
+        edge.object = normalize_entity_name(edge.object)
         self._edges[edge.id] = edge
         self._subject_index[edge.subject].add(edge.id)
         self._object_index[edge.object].add(edge.id)
@@ -323,6 +333,7 @@ class InMemoryGraphStore(GraphStoreBase):
             }
 
         data = {
+            "current_turn": self.current_turn,
             "nodes": [node_to_dict(n) for n in self._nodes.values()],
             "edges": [edge_to_dict(e) for e in self._edges.values()],
         }
@@ -331,6 +342,8 @@ class InMemoryGraphStore(GraphStoreBase):
     def deserialize(self, data: str) -> None:
         """Load graph from JSON string. Replaces current state."""
         parsed = json.loads(data)
+
+        self.current_turn = parsed.get("current_turn", 0)
 
         self._nodes.clear()
         self._edges.clear()

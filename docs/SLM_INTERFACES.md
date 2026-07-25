@@ -11,7 +11,7 @@ Your ONLY task is to extract facts from the observation text and return them as 
 SCHEMA:
 - subject: entity name (lowercase)
 - subject_type: strictly one of [ROOM, OBJECT, CHARACTER]
-- relation: strictly one of [contains, connects_to, located_in, holds, has_state, is_type]
+- relation: strictly one of [contains, connects_to, is_in, carries, has_state, located_at]
 - object: target entity name or state value (lowercase)
 - object_type: strictly one of [ROOM, OBJECT, CHARACTER, STATE]
 - extraction_type: strictly one of [direct, implied, negation]
@@ -23,7 +23,7 @@ RULES:
 EXAMPLES:
 Text: "You've entered a kitchen. There is an exit to the north. Don't worry, it is unblocked."
 [
-  {"subject": "kitchen", "subject_type": "ROOM", "relation": "located_in", "object": "you", "object_type": "CHARACTER", "extraction_type": "implied"},
+  {"subject": "kitchen", "subject_type": "ROOM", "relation": "is_in", "object": "you", "object_type": "CHARACTER", "extraction_type": "implied"},
   {"subject": "kitchen", "subject_type": "ROOM", "relation": "has_state", "object": "exit to north is unblocked", "object_type": "STATE", "extraction_type": "direct"}
 ]
 

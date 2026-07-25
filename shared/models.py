@@ -81,6 +81,8 @@ class RawExtraction:
     subject: str
     relation: str
     object: str
+    subject_type: Optional[str] = None
+    object_type: Optional[str] = None
     extraction_type: str = "direct"         # "direct" | "implied" | "negation"
     source_segment: Optional[TextSegment] = None
     extraction_method: str = "slm"          # "slm" | "rule_fallback"
@@ -100,6 +102,8 @@ class CandidateFact:
     source_turn_id: int                     # Turn that produced this
     extraction_type: ExtractionType         # DIRECT | IMPLIED | NEGATION
     extraction_method: ExtractionMethod     # SLM | RULE_FALLBACK
+    subject_type: Optional[NodeType] = None # Explicit node type from extractor
+    object_type: Optional[NodeType] = None  # Explicit node type from extractor
 
 
 # ═══════════════════════════════════════════════════════════════════════════

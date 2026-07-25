@@ -136,7 +136,7 @@ class RevisionPolicy:
             subject=candidate.subject,
             relation=candidate.relation,
             object=candidate.object,
-            confidence=override_confidence or candidate.confidence,
+            confidence=override_confidence if override_confidence is not None else candidate.confidence,
             source_turn_id=turn_id,
             extraction_method=candidate.extraction_method,
             t_observed=turn_id,

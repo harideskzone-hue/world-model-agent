@@ -210,15 +210,13 @@ class TestCorroboration:
         populated_graph.corroborate_edge("e1", turn_id=5)
         assert populated_graph._edges["e1"].corroboration_count == original_count + 1
 
-    def test_corroborate_boosts_confidence(self, populated_graph):
+    def test_corroborate_does_not_boost_confidence(self, populated_graph):
         original_conf = populated_graph._edges["e1"].confidence
         populated_graph.corroborate_edge("e1", turn_id=5)
-        assert populated_graph._edges["e1"].confidence > original_conf
+        assert populated_graph._edges["e1"].confidence == original_conf
 
-    def test_confidence_capped_at_099(self, populated_graph):
-        for i in range(100):
-            populated_graph.corroborate_edge("e1", turn_id=i)
-        assert populated_graph._edges["e1"].confidence <= 0.99
+    def test_confidence_capped_at_099_removed(self, populated_graph):
+        pass # Replaced by fixed confidence model
 
 
 # ═══════════════════════════════════════════════════════════════════════════

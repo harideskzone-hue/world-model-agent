@@ -14,7 +14,7 @@ from shared.enums import (
     RelationType, ContradictionType, ConflictCategory, EdgeStatus,
 )
 from world_model.graph_store import GraphStoreBase
-from world_model.schema import are_states_conflicting, is_state_relation, is_single_occupancy_relation
+from world_model.schema import are_states_conflicting, is_state_relation, is_single_occupancy_relation, normalize_entity_name
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +48,8 @@ class ContradictionDetector:
         Returns:
             ContradictionResult indicating EXPAND, CORROBORATE, or REVISE
         """
+        candidate.subject = normalize_entity_name(candidate.subject)
+        candidate.object = normalize_entity_name(candidate.object)
         # 1. Slot lookup: find existing edges with same (subject, relation)
         existing_edges = self._graph.get_active_edges_by_slot(
             candidate.subject, candidate.relation
